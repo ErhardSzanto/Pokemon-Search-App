@@ -34,11 +34,18 @@
                 const evolutionResponse = await fetch(speciesData.evolution_chain.url);
                 const evolutionData = await evolutionResponse.json();
 
-                // Parse evolution chain
+                // Parse evolution chain and fetch details for each evolution
                 const evolutionChain = [];
                 let currentEvolution = evolutionData.chain;
                 while (currentEvolution) {
-                    evolutionChain.push(currentEvolution.species.name);
+                    if (currentEvolution.species.name !== data.name) {
+                        const evoResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${currentEvolution.species.name}`);
+                        const evoData = await evoResponse.json();
+                        evolutionChain.push({
+                            name: currentEvolution.species.name,
+                            img: evoData.sprites.front_default
+                        });
+                    }
                     currentEvolution = currentEvolution.evolves_to[0];
                 }
 
@@ -50,8 +57,15 @@
                         <p class="text-lg">Type: ${data.types.map(type => type.type.name).join(', ')}</p>
                         <p class="text-gray-600 mt-4">${flavorText}</p>
                         <div class="mt-4">
-                            <h3 class="text-xl font-bold">Evolution Chain:</h3>
-                            <p>${evolutionChain.map((evo, index) => `${index + 1}. ${evo}`).join('<br>')}</p>
+                            ${evolutionChain.length > 0 ? `<h3 class="text-xl font-bold">Evolution Chain:</h3>` : ''}
+                            <div class="flex justify-center gap-4 mt-4">
+                                ${evolutionChain.map(evo => `
+                                    <div class="text-center">
+                                        <img class="mx-auto" src="${evo.img}" alt="${evo.name}" />
+                                        <p class="capitalize text-lg">${evo.name}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
                 `;
